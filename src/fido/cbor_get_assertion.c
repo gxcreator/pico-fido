@@ -124,6 +124,9 @@ int cbor_get_assertion(const uint8_t *data, size_t len, bool next) {
         else if (val_u == 0x03) { // excludeList
             CBOR_PARSE_ARRAY_START(_f1, 2)
             {
+                if (allowList_len >= MAX_CREDENTIAL_COUNT_IN_LIST) {
+                    CBOR_ERROR(CTAP2_ERR_LIMIT_EXCEEDED);
+                }
                 PublicKeyCredentialDescriptor *pc = &allowList[allowList_len];
                 CBOR_PARSE_MAP_START(_f2, 3)
                 {
@@ -133,6 +136,9 @@ int cbor_get_assertion(const uint8_t *data, size_t len, bool next) {
                     if (strcmp(_fd3, "transports") == 0) {
                         CBOR_PARSE_ARRAY_START(_f3, 4)
                         {
+                            if (pc->transports_len >= MAX_TRANSPORT_COUNT) {
+                                CBOR_ERROR(CTAP2_ERR_LIMIT_EXCEEDED);
+                            }
                             CBOR_FIELD_GET_TEXT(pc->transports[pc->transports_len], 4);
                             pc->transports_len++;
                         }
@@ -481,6 +487,9 @@ int cbor_get_assertion(const uint8_t *data, size_t len, bool next) {
                 }
                 numberOfCredentialsx = numberOfCredentials;
                 datax = (uint8_t *) calloc(1, len);
+                if (datax == NULL) {
+                    CBOR_ERROR(CTAP1_ERR_OTHER);
+                }
                 memcpy(datax, data, len);
                 lenx = len;
                 flagsx = flags;
@@ -608,6 +617,9 @@ int cbor_get_assertion(const uint8_t *data, size_t len, bool next) {
 
     size_t aut_data_len = 32 + 1 + 4 + ext_len;
     aut_data = (uint8_t *) calloc(1, aut_data_len + clientDataHash.len);
+    if (aut_data == NULL) {
+        CBOR_ERROR(CTAP1_ERR_OTHER);
+    }
     uint8_t *pa = aut_data;
     memcpy(pa, rp_id_hash, 32); pa += 32;
     *pa++ = flags;

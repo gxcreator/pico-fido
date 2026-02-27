@@ -1,7 +1,10 @@
 # Pico FIDO
 This project transforms your Raspberry Pi Pico or ESP32 microcontroller into an integrated FIDO Passkey, functioning like a standard USB Passkey for authentication.
 
-If you are looking for a OpenPGP + Fido, see: https://github.com/polhenarejos/pico-fido2. Available through [PicoKey App](https://www.picokeys.com/picokeyapp/ "PicoKey App").
+If you are looking for a OpenPGP + Fido, see: https://github.com/librekeys/pico-fido2.
+
+This is a fork of the community edition of the project located at https://github.com/polhenarejos/pico-fido  
+For licensing information, see the LICENSE file
 
 ## Features
 Pico FIDO includes the following features:
@@ -51,30 +54,20 @@ Microcontrollers RP2350 and ESP32-S3 are designed to support secure environments
 
 **However**, the RP2040 microcontroller lacks this level of security hardware, meaning that it cannot provide the same protection. Data stored on its flash memory, including private or master keys, can be easily accessed or dumped, as encryption of the master key itself is not feasible. Consequently, if an RP2040 device is stolen, any stored private or secret keys may be exposed.
 
-## Download
-**If you own an ESP32-S3 board, go to [ESP32 Flasher](https://www.picokeys.com/esp32-flasher/) for flashing your Pico FIDO.**
-
-If you own a Raspberry Pico (RP2040 or RP2350), go to [Download page](https://www.picokeys.com/getting-started/), select your vendor and model and download the proper firmware; or go to [Release page](https://www.github.com/polhenarejos/pico-fido/releases/) and download the UF2 file for your board.
-
-UF2 files are shiped with a VID/PID granted by RaspberryPi (2E8A:10FE). If you plan to use it with OpenSC or similar tools, you should modify Info.plist of CCID driver to add these VID/PID or use the [PicoKey App](https://www.picokeys.com/picokeyapp/ "PicoKey App").
-
-You can use whatever VID/PID for internal purposes, but remember that you are not authorized to distribute the binary with a VID/PID that you do not own.
-
-Note that the [PicoKey App](https://www.picokeys.com/picokeyapp/ "PicoKey App") is the most recommended.
-
 ## Build for Raspberry Pico
 Before building, ensure you have installed the toolchain for the Pico and that the Pico SDK is properly located on your drive.
 
 ```sh
-git clone https://github.com/polhenarejos/pico-fido
+git clone https://github.com/librekeys/pico-fido
 git submodule update --init --recursive
 cd pico-fido
 mkdir build
 cd build
-PICO_SDK_PATH=/path/to/pico-sdk cmake .. -DPICO_BOARD=board_type -DUSB_VID=0x1234 -DUSB_PID=0x5678
+PICO_SDK_PATH=/path/to/pico-sdk cmake .. -DPICO_BOARD=board_type -DUSB_VID=0x1D50 -DUSB_PID=0x619B
 make
 ```
-Note that `PICO_BOARD`, `USB_VID` and `USB_PID` are optional. If not provided, `pico` board and VID/PID `FEFF:FCFD` will be used.
+Note that `PICO_BOARD`, `USB_VID` and `USB_PID` are optional. If not provided, `pico` board and VID/PID `1D50:619B` will be used.
+
 
 Additionally, you can pass the `VIDPID=value` parameter to build the firmware with a known VID/PID. The supported values are:
 
@@ -89,12 +82,17 @@ Additionally, you can pass the `VIDPID=value` parameter to build the firmware wi
 - `Gnuk`
 - `GnuPG`
 
+You can use whatever VID/PID for your own personal use. **But remember that you are not authorized to distribute the binary with a VID/PID that you do not own.**
+The VID/PID `1D50:619B` is provided to the project by [OpenMoko](https://wiki.openmoko.org/wiki/USB_Product_IDs). It can only be used for builds distributed under a free and open source license.
+
 After running `make`, the binary file `pico_fido.uf2` will be generated. To load this onto your Pico board:
 
 1. Put the Pico board into loading mode by holding the `BOOTSEL` button while plugging it in.
 2. Copy the `pico_fido.uf2` file to the new USB mass storage device that appears.
 3. Once the file is copied, the Pico mass storage device will automatically disconnect, and the Pico board will reset with the new firmware.
 4. A blinking LED will indicate that the device is ready to work.
+
+To configure your device you can use the [picoforge desktop application ](https://github.com/librekeys/picoforge).
 
 ## Led blink
 Pico FIDO uses the led to indicate the current status. Four states are available:
@@ -138,55 +136,11 @@ To run a subset of tests, use the `-k <test>` flag:
 pytest -k test_credprotect
 ```
 
-## License and Commercial Use
+## License
 
-This project is available under two editions:
-
-**Community Edition (FOSS)**
-- Released under the GNU Affero General Public License v3 (AGPLv3).
-- You are free to study, modify, and run the code, including for internal evaluation.
-- If you distribute modified binaries/firmware, OR if you run a modified version of this project as a network-accessible service, you must provide the corresponding source code to the users of that binary or service, as required by AGPLv3.
-- No warranty. No SLA. No guaranteed support.
-
-**Enterprise / Commercial Edition**
-- Proprietary license for organizations that want to:
-  - run this in production with multiple users/devices,
-  - integrate it into their own product/appliance,
-  - enforce corporate policies (PIN policy, admin/user roles, revocation),
-  - deploy it as an internal virtualized / cloud-style service,
-  - and *not* be required to publish derivative source code.
-- Base package includes:
-  - commercial license (no AGPLv3 disclosure obligation for your modifications / integration)
-  - onboarding call
-  - access to officially signed builds
-- Optional / on-demand enterprise components that can be added case-by-case:
-  - ability to operate in multi-user / multi-device environments
-  - device inventory, traceability and secure revocation/offboarding
-  - custom attestation, per-organization device identity / anti-cloning
-  - virtualization / internal "HSM or auth backend" service for multiple teams or tenants
-  - post-quantum (PQC) key material handling and secure PQC credential storage
-  - hierarchical deterministic key derivation (HD wallet–style key trees for per-user / per-tenant keys, firmware signing trees, etc.)
-  - cryptographically signed audit trail / tamper-evident logging
-  - dual-control / two-person approval for high-risk operations
-  - secure key escrow / disaster recovery strategy
-  - release-signing / supply-chain hardening toolchain
-  - policy-locked hardened mode ("FIPS-style profile")
-  - priority security-response SLA
-  - white-label demo / pre-sales bundle
-
-Typical licensing models:
-- Internal use (single legal entity, including internal private cloud / virtualized deployments).
-- OEM / Redistribution / Service (ship in your product OR offer it as a service to third parties).
-
-These options are scoped and priced individually depending on which components you actually need.
-
-For commercial licensing and enterprise features, email pol@henarejos.me
-Subject: `ENTERPRISE LICENSE <your company name>`
-
-See `ENTERPRISE.md` for details.
+This project is released under the GNU Affero General Public License v3 (AGPLv3).
+A copy of the AGPLv3 license is available in the `LICENSE` file.
 
 ## Credits
-Pico FIDO uses the following libraries or portion of code:
-- MbedTLS for cryptographic operations.
-- TinyUSB for low level USB procedures.
-- TinyCBOR for CBOR parsing and formatting.
+This project uses libraries and portion of code from other projects that are detailed in the `LICENSE` file.
+

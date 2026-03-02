@@ -2,12 +2,19 @@
 
 Thank you for your interest in contributing to this project.
 
+This repository is published under AGPLv3
+
 By opening a pull request, you agree to all of the following:
 
 1. **You have the right to contribute this code.**
    You are either the original author of the contribution, or you have obtained the necessary rights/permissions to contribute it under these terms.
 
-1. **Attribution.**
+2. **Licensing.**
+   You agree that your contribution may be:
+   - merged into this repository, and
+   - used, copied, modified, sublicensed, and redistributed under the AGPLv3
+
+3. **Attribution.**
    The maintainers may keep or add attribution lines such as
    `Copyright (c) <your name>` or an AUTHORS / CONTRIBUTORS list.
    The maintainers may also make changes for clarity, style, security, refactoring,
@@ -50,9 +57,6 @@ Please keep PRs focused (one logical change per PR if possible).
   - impact on existing flows / security model
   - any new dependencies
 
-This helps avoid doing a bunch of work on something that won't be accepted
-in the Community Edition.
-
 ### 4. Coding style / security posture
 - Aim for clarity and small, auditable changes. This code runs in places
   where secrets live.
@@ -63,6 +67,11 @@ in the Community Edition.
 ### 5. Commit / PR format
 - Use descriptive commit messages ("Fix PIN retry counter wrap" is better than "fix stuff").
 - In the PR description, please include a short summary of what was changed and why.
+- At the bottom of the PR description, **copy/paste and confirm the licensing line below**:
+
+  > I confirm that I have read `CONTRIBUTING.md` and I agree to its terms
+
+A PR without that confirmation may be delayed or closed without merge.
 
 ## Thank you
 

@@ -33,7 +33,8 @@ By checking the box below, you confirm ALL of the following:
 
 - You are the author of this contribution, or you have the right to contribute it.
 - You have read `CONTRIBUTING.md`.
-- You agree that this contribution may be merged, used, modified, and redistributed under the AGPLv3
+- You agree that this contribution may be merged, used, modified, and redistributed
+  under the AGPLv3 Community Edition
 - You understand that submitting this PR does not create any support obligation,
   SLA, or guarantee of merge.
 

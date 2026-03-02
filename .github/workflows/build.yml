@@ -1,0 +1,170 @@
+name: "Build all targets"
+
+on:
+  push:
+    branches: [ "main", "development" ]
+  pull_request:
+    branches: [ "main", "development" ]
+  workflow_dispatch:
+
+jobs:
+  build-pico:
+    name: Build ${{ matrix.board }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [weact_studio_rp2040_16mb, sparkfun_promicro_rp2350]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Cache apt packages
+        if: env.ACT != 'true'
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: apt-pico-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: apt-pico-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
+
+      - name: Cache pico-sdk & picotool
+        if: env.ACT != 'true'
+        id: cache-sdk
+        uses: actions/cache@v4
+        with:
+          path: |
+            pico-sdk
+            picotool
+            /usr/local/bin/picotool
+            /usr/local/lib/libpicotool*
+          key: pico-sdk-2.1.1-picotool-2.1.1-${{ runner.os }}
+
+      - name: Clone pico-sdk & picotool
+        if: steps.cache-sdk.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 --branch 2.1.1 https://github.com/raspberrypi/pico-sdk
+          cd pico-sdk
+          git submodule update --init --depth 1
+          cd ..
+          git clone --depth 1 --branch 2.1.1 https://github.com/raspberrypi/picotool
+          cd picotool
+          git submodule update --init --depth 1
+
+      - name: Build & install picotool
+        if: steps.cache-sdk.outputs.cache-hit != 'true'
+        run: |
+          cd picotool
+          mkdir -p build
+          cd build
+          cmake -DPICO_SDK_PATH=../../pico-sdk ..
+          make -j$(nproc)
+          sudo make install
+
+      - name: Build firmware
+        env:
+          PICO_SDK_PATH: ${{ github.workspace }}/pico-sdk
+        run: |
+          mkdir -p build_ci
+          cd build_ci
+          cmake .. -DPICO_BOARD=${{ matrix.board }} -DUSB_VID=0x1D50 -DUSB_PID=0x619B
+          make -j$(nproc)
+
+      - name: Upload artifact
+        if: env.ACT != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pico_fido_${{ matrix.board }}
+          path: build_ci/pico_fido.uf2
+          retention-days: 14
+
+  build-esp32:
+    name: Build ESP32 (${{ matrix.chip }})
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - chip: esp32s3
+            idf_target: esp32s3
+          - chip: esp32s2
+            idf_target: esp32s2
+    runs-on: ubuntu-latest
+    container:
+      image: espressif/idf:v5.5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Configure VID/PID
+        run: |
+          echo "CONFIG_TINYUSB_DESC_CUSTOM_VID=0x1D50" >> sdkconfig.defaults
+          echo "CONFIG_TINYUSB_DESC_CUSTOM_PID=0x619B" >> sdkconfig.defaults
+
+      - name: Build firmware
+        run: |
+          . $IDF_PATH/export.sh
+          idf.py set-target ${{ matrix.idf_target }}
+          idf.py build
+
+      - name: Create merged binary
+        run: |
+          . $IDF_PATH/export.sh
+          mkdir -p release
+          cd build
+          esptool.py --chip ${{ matrix.chip }} merge_bin -o ../release/pico_fido_${{ matrix.chip }}.bin @flash_args
+
+      - name: Upload artifact
+        if: env.ACT != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pico_fido_${{ matrix.chip }}
+          path: release/pico_fido_${{ matrix.chip }}.bin
+          retention-days: 14
+
+  build-emulation:
+    if: false
+    name: Build emulation
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Cache apt packages
+        if: env.ACT != 'true'
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: apt-emu-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: apt-emu-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends cmake build-essential
+
+      - name: Build emulation
+        run: |
+          mkdir -p build_emu
+          cd build_emu
+          cmake -DENABLE_EMULATION=1 ..
+          make -j$(nproc)
+      - name: Upload artifact
+        if: env.ACT != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pico_fido_emulation
+          path: build_emu/pico_fido
+          retention-days: 14

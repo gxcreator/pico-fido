@@ -95,10 +95,13 @@ run_in_docker()
         shift 2
     fi
 
+    # Mount the top-level repo so git submodule paths resolve correctly
+    GIT_TOPLEVEL="$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null || echo "$PWD")"
+
     ${DOCKER} container run --rm \
         --cap-add ALL \
         --privileged \
-        --volume $PWD:$PWD \
+        --volume "${GIT_TOPLEVEL}:${GIT_TOPLEVEL}" \
         --workdir ${WORKDIR} \
         -e MAKEFLAGS \
         ${ENV_ARGS} \

@@ -1,5 +1,7 @@
 #!/bin/bash -eu
 
-source tests/docker_env.sh
-run_in_docker ./tests/start-up-and-test.sh
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+source "$SCRIPT_DIR/docker_env.sh"
+run_in_docker "$SCRIPT_DIR/start-up-and-test.sh"
 

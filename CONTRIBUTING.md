@@ -20,7 +20,7 @@ By opening a pull request, you agree to all of the following:
    The maintainers may also make changes for clarity, style, security, refactoring,
    or integration reasons.
 
-1. **No automatic SLA.**
+4. **No automatic SLA.**
    Submitting a pull request does *not* create any support obligation,
    service-level agreement, warranty, or guarantee that the contribution
    will be reviewed, merged, or maintained.

@@ -92,6 +92,9 @@ int cbor_make_credential(const uint8_t *data, size_t len) {
         else if (val_u == 0x04) { // pubKeyCredParams
             CBOR_PARSE_ARRAY_START(_f1, 2)
             {
+                if (pubKeyCredParams_len >= MAX_CREDENTIAL_COUNT_IN_LIST) {
+                    CBOR_ERROR(CTAP2_ERR_LIMIT_EXCEEDED);
+                }
                 PublicKeyCredentialParameters *pk = &pubKeyCredParams[pubKeyCredParams_len];
                 CBOR_PARSE_MAP_START(_f2, 3)
                 {
@@ -107,6 +110,9 @@ int cbor_make_credential(const uint8_t *data, size_t len) {
         else if (val_u == 0x05) { // excludeList
             CBOR_PARSE_ARRAY_START(_f1, 2)
             {
+                if (excludeList_len >= MAX_CREDENTIAL_COUNT_IN_LIST) {
+                    CBOR_ERROR(CTAP2_ERR_LIMIT_EXCEEDED);
+                }
                 PublicKeyCredentialDescriptor *pc = &excludeList[excludeList_len];
                 CBOR_PARSE_MAP_START(_f2, 3)
                 {
@@ -116,6 +122,9 @@ int cbor_make_credential(const uint8_t *data, size_t len) {
                     if (strcmp(_fd3, "transports") == 0) {
                         CBOR_PARSE_ARRAY_START(_f3, 4)
                         {
+                            if (pc->transports_len >= MAX_TRANSPORT_COUNT) {
+                                CBOR_ERROR(CTAP2_ERR_LIMIT_EXCEEDED);
+                            }
                             CBOR_FIELD_GET_TEXT(pc->transports[pc->transports_len], 4);
                             pc->transports_len++;
                         }
